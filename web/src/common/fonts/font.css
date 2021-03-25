@@ -1,0 +1,16 @@
+
+@font-face {
+  font-family: "华文中宋";
+  src: url('./stzhongs.ttf');
+  src: url-loader('./stzhongs.ttf');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "楷体";
+  src: url('./simkai.ttf');
+  src: url-loader('./simkai.ttf');
+  font-weight: normal;
+  font-style: normal;
+}
