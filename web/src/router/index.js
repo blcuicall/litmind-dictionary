@@ -12,19 +12,6 @@ export default new Router({
       path: '/',
       name: 'dictMain',
       component: DictMain
-    },
-    {
-      path: '/redictmain',
-      name: 'redictmain',
-      component: ReDictMain
-    },{
-      path: '/admin/30gmcyt8000llyhy',
-      name: 'admin',
-      component: AdminUserIp
-    },,{
-      path: '/readmin/30gmcyt8000llyhy',
-      name: 'readmin',
-      component: ReAdminUserIp
-    },
+    }
   ]
 })

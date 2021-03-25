@@ -16,7 +16,7 @@ Vue.use(ResultToolView)
 Vue.config.productionTip = false
 Vue.prototype.GLOBAL = global_
 Vue.prototype.axios = axios
-/* eslint-disable no-new */
+
 new Vue({
   el: '#app',
   router,

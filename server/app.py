@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import tornado.web
 import tornado.ioloop
 from handler.home import HomeSearchHandler
@@ -23,9 +24,7 @@ HANDLERS = [
 ]
 settings = {
     "cookie_secret": "zkvi2AnRTiG0tEe7PfbHJy+3aMCkh0v2gOxZ5/vIRxo=",
-    # "login_url": "/login",
     "debug": True,
-    # "xsrf_cookies": True,
 }
 
 

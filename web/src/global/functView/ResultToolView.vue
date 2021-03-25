@@ -1,22 +1,13 @@
  <template>
   <div class="background">
-    <!-- <Label class="nav-title" >{{resultDataDict}}</Label>  -->
     <div class="result-div">
       <div class="result-explain-div">
         <div class="top-result1">{{ resultDataDict.explain }}</div>
-        <!-- <div class="top-result1" v-if="resultDataDict.explain2">：
-                    </div> -->
         <div class="top-result2" v-if="resultDataDict.explain2">
           {{ resultDataDict.explain2 }}
         </div>
 
-        <!-- <div class="top-result" @click="zanBtnClick">{{zanLabel}}
-                    </div>
-                    <div class="top-result" @click="caiBtnClick">{{caiLabel}}
-                    </div> -->
-
         <div>
-          <!-- <div class=" xiugai-btn" @click="resetBtnClick">{{resetBtnLabel}}</div> -->
           <el-button class="xiugai-btn" @click="resetBtnClick">{{
             resetBtnLabel
           }}</el-button>
@@ -29,8 +20,6 @@
             <li class="infinite-list-li" v-for="value in dataArrList">
               {{ value.contentQian }}<span>{{ value.contentZhong }}</span
               >{{ value.contentHou }}
-
-              <!-- <span v-if="value.source" class="sourceLabel">{{sourceLabel}}</span> -->
 
               <span v-if="value.source" class="sourceLabel2"
                 >{{ sourceLabel }}{{ value.source }}</span
@@ -46,7 +35,6 @@
             @click="moreLabelClinck"
             >{{ moreBtnLabel }}</el-button
           >
-          <!-- <label class="more-btn" @click="moreLabelClinck" :style="{weight:moreSeachWeight}">{{moreBtnLabel}}</label> -->
         </div>
       </div>
 
@@ -116,8 +104,7 @@ export default {
   methods: {
     moreLabelClinck() {
       if (this.changeSign == 1) {
-        // 现在是收起状态
-        this.changeSign = 2; // 变为展开状态
+        this.changeSign = 2;
         if (this.selectType == 1) {
           this.moreBtnLabel = "- Less examples";
         } else {
@@ -125,7 +112,7 @@ export default {
         }
         this.dataArrList = this.resultDataDict.examples;
       } else {
-        this.changeSign = 1; // 变为收起状态
+        this.changeSign = 1;
         this.dataArrList = this.oneArr;
 
         if (this.selectType == 1) {
@@ -136,7 +123,6 @@ export default {
       }
     },
     zanBtnClick() {
-      // 正向词典点赞
       console.log("点赞了。。。");
       this.$http
         .post(
@@ -146,7 +132,6 @@ export default {
         )
         .then(
           function (res) {
-            // this.isShowLoadingView =  false
             if (res.body.statusCode == "200") {
               console.log(res.body.data);
             } else {
@@ -155,7 +140,6 @@ export default {
             }
           },
           function (res) {
-            // this.isShowLoadingView =  false
             console.log(res.status);
             this.isShowErrorView = false;
           }
@@ -177,7 +161,6 @@ export default {
         )
         .then(
           function (res) {
-            // this.isShowLoadingView =  false
             if (res.body.statusCode == "200") {
               console.log(res.body.data);
             } else {
@@ -186,7 +169,6 @@ export default {
             }
           },
           function (res) {
-            // this.isShowLoadingView =  false
             console.log(res.status);
             this.isShowErrorView = false;
           }
@@ -195,7 +177,6 @@ export default {
     resetBtnClick() {
       this.$emit("done", this.resultDataDict);
     },
-    // 点赞  踩
     exchangeExplainInfo(explainStr, praiseStr, stepOnStr, modifyStr) {
       this.$http
         .post(
@@ -210,7 +191,6 @@ export default {
         )
         .then(
           function (res) {
-            // this.isShowLoadingView =  false
             if (res.body.statusCode == "200") {
               console.log(res.body.data);
             } else {
@@ -219,7 +199,6 @@ export default {
             }
           },
           function (res) {
-            // this.isShowLoadingView =  false
             console.log(res.status);
             this.isShowErrorView = false;
           }
@@ -233,16 +212,19 @@ export default {
 .result-div {
   background-color: white;
 }
+
 .result-div .result-explain-div {
   display: flex;
   margin: 10px 30px 0 10px;
 }
+
 .top-result {
   margin: 0 20px 0 0;
   color: #00a1b5;
   font-weight: bold;
   font-family: "Arial", "微软雅黑";
 }
+
 .top-result1 {
   margin: 0 0px 0 0px;
   font-size: 18px;
@@ -250,6 +232,7 @@ export default {
   font-family: "Arial", "微软雅黑";
   color: #555555;
 }
+
 .top-result2 {
   margin: 0 20px 0 20px;
   font-size: 18px;
@@ -260,7 +243,6 @@ export default {
 
 .xiugai-btn {
   margin: 0 20px 5px 20px;
-
   background-color: #00a1b5;
   height: 25px;
   line-height: 0;
@@ -275,27 +257,31 @@ export default {
 
 .result-div .result-list-div {
   text-align: left;
-
   background-color: #f3fafb;
   margin: 0px 0px 0px 30px;
 }
+
 .infinite-list-div {
   display: flex;
   margin: 10px 0px 0px 0px;
 }
+
 .infinite-list {
   width: 100%;
   margin: 10px 10px 0px 0px;
   list-style-type: decimal;
 }
+
 .tool-btn {
   margin: 0px 20px 0px;
   font-size: 14px;
 }
+
 .empty-div {
   margin: 2px 0 2px 0;
   height: 2px;
 }
+
 .infinite-list-li {
   font-size: 16px;
   font-family: "微软雅黑";
@@ -308,9 +294,9 @@ span {
   font-family: "微软雅黑";
   margin: 0px 0 0 0;
 }
+
 .sourceLabel2 {
   width: 300px;
-
   float: right;
   font-size: 14px;
   font-family: "楷体";
@@ -319,20 +305,20 @@ span {
 
 .more-btn {
   margin: 0px 0 0px 30px;
-
   height: 25px;
   line-height: 0;
-
   border: 1px solid #9facad;
   border-radius: 17.5px;
   color: #aaaaaa;
   font-size: 14px;
   font-family: "微软雅黑";
 }
+
 .zhanwei-div {
   width: 10px;
 }
 </style>
+
  <style >
 .more-btn:hover {
   background-color: unset;
