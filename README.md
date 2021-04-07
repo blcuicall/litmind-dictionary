@@ -1,10 +1,4 @@
-<center>
-<img src="assets/litmind-logo.png" style="zoom:20%;"/>
-<h1>
-LitMind Dictionary: An Open-Source Online Dictionary
-</h1>
-</center>
-
+![LOGO](assets/logo.png)
 ## What is LitMind Dictionary?
 
 LitMind Dictionary(https://dictionary.litmind.ink) is an open-source online generative dictionary that takes a word and context containing the word as input and automatically generates a definition as output.
