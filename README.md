@@ -35,6 +35,7 @@ LitMind Dictionary's web interface is developed based on the [VUE](https://cn.vu
 You may install [npm](https://www.npmjs.com/) package management tool first, and run the following commands to run our web interface locally.
 
 ``` bash
+cd web
 # init the project and install modules
 npm install
 
