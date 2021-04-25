@@ -1,4 +1,7 @@
-![LOGO](assets/logo.png)
+<p align="center">
+<img src="assets/logo.png" width="75%"/>
+</p>
+
 ## What is LitMind Dictionary?
 
 LitMind Dictionary(https://dictionary.litmind.ink) is an open-source online generative dictionary that takes a word and context containing the word as input and automatically generates a definition as output.
