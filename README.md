@@ -25,27 +25,36 @@ The definition generation model (DGM) shown in the figure below is the core comp
 model, where the encoder is initialized with BERT.
 
 <p align="center">
-  <img src="assets/model.png" width="50%" />
+  <img src="assets/model.png" width="60%" />
 </p>
 
 ## How to Run This Code?
 ### Web
+
+LitMind Dictionary's web interface is developed based on the [VUE](https://cn.vuejs.org/index.html) framework.
+You may install [npm](https://www.npmjs.com/) package management tool first, and run the following commands to run our web interface locally.
+
 ``` bash
 # init the project and install modules
 npm install
 
 # local run
 npm run dev
-
-# build
-npm run build
 ```
 
 ### Server
-``` bash
-# run server
-bash start.sh
 
-# stop server
-bsh stop.sh
+#### Requirements
+- tornado
+- requests
+- sqlalchemy
+- captcha
+- numpy
+
+#### How to run the code
+After installing the dependency packages, you can run the code using the command:
+
+``` bash
+cd server
+python app.py
 ```
