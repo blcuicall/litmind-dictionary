@@ -63,7 +63,7 @@ def get_mysql_conn():
     PORT = '3306'
     DATABASE = ''
     USERNAME = ""
-    PASSWORD = "BLCUicall12!@"
+    PASSWORD = ""
     DB_URL = 'mysql+pymysql://{}:{}@{}:{}/{}?charset=utf8'.format(
         USERNAME, PASSWORD, HOSTNAME, PORT, DATABASE)
     db = create_engine(DB_URL, echo=True)
