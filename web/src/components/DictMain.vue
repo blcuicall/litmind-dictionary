@@ -227,9 +227,9 @@ export default {
           (this.aboutSystem = "About LitMind"),
           (this.aboutUs = "About Us"),
           (this.redictBtnLabel = "Reverse Dictionary"),
-          (this.ciLabel = "WORD"),
+          (this.ciLabel = "Word"),
           (this.ciLabelHolder = "Type the search Word."),
-          (this.juLabel = "SENTENCE"),
+          (this.juLabel = "Sentence"),
           (this.juLabelHolder = "Please input a sentence containing the word."),
           (this.noInvoSearchCi =
             "There is no query word in the sentence, please re-enter.");

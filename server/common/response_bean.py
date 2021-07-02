@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
-
 class ResponseBean(object):
 
+
+    # staticmethod 返回函数的静态方法。该方法不强制要求传递参数，
     @staticmethod
     def set_data(data):
         result = {}
@@ -20,10 +20,17 @@ class ResponseBean(object):
 
 
 class CodeConst(object):
+    # 成功
     CODE_OK = "200"
+
+    # 错误
     CODE_ERROR = "500"
+
+    # 传入参数错误
     CODE_ERROR_PARAMETER = "501"
     CODE_ERROR_PARAMETER_EMPTY = "502"
+
+    # 失败
     CODE_FAIL = "400"
     CODE_FAIL_LOGIN_NEEDED = "401"
     CODE_WRONG_PAPER_NO = "402"
@@ -33,10 +40,14 @@ class CodeConst(object):
     CODE_FAIL_DATA_EMPTY = "3103"
     CODE_FAIL_USER_EXIST = "2333"
     CODE_CAPTCHA_ERROR = "3333"
+    # 模型
     CODE_NO_USER_OR_CUSTOMER = "4001"
+
     CODE_TOKEN_ERROR = "4002"
     CODE_TOKEN_EXPIRES = "4003"
     CODE_NO_AUTH = "4004"
+
+    # 未知
 
     CODE_UNKNOWN = "9999"
     CODE_INFO_UNCON = "5555"

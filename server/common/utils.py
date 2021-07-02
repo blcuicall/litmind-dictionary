@@ -1,17 +1,24 @@
-# -*- coding: utf-8 -*-
-
 import datetime
 import time
 import hashlib
+
+
+# 　UUID: 通用唯一标识符 ( Universally Unique Identifier ), 对于所有的UUID它可以保证在空间和时间上的唯一性. 它是通过MAC地址, 时间戳, 命名空间, 随机数, 伪随机数来保证生成ID的唯一性, 有着固定的大小( 128 bit ).  它的唯一性和一致性特点使得可以无需注册过程就能够产生一个新的UUID
 import uuid
 import requests
-# import pymysql
+import pymysql
 from sqlalchemy import *
-# from sqlalchemy.orm import sessionmaker
-# from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
 import re
+
+
+# 用captcha.image下的 ImageCaptcha 生成字符验证码图片, 只需三行代码
 from captcha.image import ImageCaptcha
+
+
 import os
+
 import io
 import random
 import numpy as np
@@ -59,11 +66,12 @@ def split_sentence(sentence):
 
 
 def get_mysql_conn():
-    HOSTNAME = '127.0.0.1'
-    PORT = '3306'
-    DATABASE = ''
-    USERNAME = ""
-    PASSWORD = ""
+    # 1.连接数据库   服务器用户：zxp 密码：yfb217     数据目录：/data/private/zxp
+    HOSTNAME = '127.0.0.1'  # ip地址 本地:127.0.0.1  服务器: 202.112.194.62
+    PORT = '3306'  # 端口号
+    DATABASE = 'new_wenxin_dictionary'  # 数据库名
+    USERNAME = "wenxin_dictionary_admin"  # 用户名  本地:root   服务器: wenxin_dictionary_admin
+    PASSWORD = "BLCUicall12!@"  # 用户登录密码  本地:123456    服务器: BLCUicall12!@
     DB_URL = 'mysql+pymysql://{}:{}@{}:{}/{}?charset=utf8'.format(
         USERNAME, PASSWORD, HOSTNAME, PORT, DATABASE)
     db = create_engine(DB_URL, echo=True)
@@ -78,6 +86,7 @@ def close_mysql_conn(db, conn):
 
 
 def sqlalchemy_result_to_dict(result):
+    # return [dict(zip(r.keys(), r)) for r in result]
     data = []
     for r in result:
         d = dict(r.items())
@@ -129,11 +138,13 @@ def get_verification_code(mobile):
 
 
 def gen_special_img(text):
+    # 设置图片大小和宽度
     width = 100
     height = 60
     print(text)
-    generator = ImageCaptcha(width=width, height=height) 
-    img = generator.generate_image(text)
+    # 生成img文件
+    generator = ImageCaptcha(width=width, height=height)  # 指定大小
+    img = generator.generate_image(text)  # 生成图片
     output = io.BytesIO()
     img.save(output, format='JPEG')
     hex_data = output.getvalue()
@@ -141,7 +152,9 @@ def gen_special_img(text):
 
 
 def get_captcha_text():
+    # 验证码字符
     characters = "0123456789abcdefghijklmnopqrstuvwxyz"
+    #生成验证码
     text = ""
     for j in range(4):
         text += random.choice(characters)
@@ -149,6 +162,9 @@ def get_captcha_text():
 
 
 def clean_space(text):
+    """"
+    处理多余的空格
+    """
     match_regex = re.compile(u'[\u4e00-\u9fa5。\.,，:：《》、\(\)（）]{1} +(?<![a-zA-Z])|\d+ +| +\d+|[a-z A-Z]+')
     should_replace_list = match_regex.findall(text)
     order_replace_list = sorted(should_replace_list,key=lambda i:len(i),reverse=True)
@@ -158,8 +174,7 @@ def clean_space(text):
         new_i = i.strip()
         text = text.replace(i,new_i)
     return text
-
-
+# 查找字符串s2 在另一个字符串s1中的位置
 def index_of_str(s1, s2):
     res = []
     index = 0
@@ -171,8 +186,7 @@ def index_of_str(s1, s2):
         res.append(index)
         index += len(s2)
     return res if res else -1
-
-
+# 删除中文解析中的句号 。
 def deleteFullpointOfChinaExplain(s1):
     clear_list = '[。]'
     s2 = re.sub(clear_list,"",s1)

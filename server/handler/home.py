@@ -1,18 +1,12 @@
-# -*- coding: utf-8 -*-
-# from flask import Flask, jsonify, request
-import random
-import hashlib
 import json
 
-from common.utils import gen_special_img, get_captcha_text
-from common.email_utils import send_email
 from common.response_bean import ResponseBean, CodeConst
+
 from common.base_handler import BaseHandler
 from common.utils import clean_space
 from common.utils import index_of_str
 from common.utils import deleteFullpointOfChinaExplain
 import sys
-import tornado.web
 
 from server.home_server import HomeService
 import requests
@@ -21,360 +15,14 @@ from corenlp_client import CoreNLP
 sys.path.append('../')
 
 
-class HomeSearchHandler(BaseHandler):
-    homeService = HomeService()
-
-    def post(self):
-        param = json.loads(self.request.body.decode('utf-8'))
-        print(param)
-
-        if param['inputWord'].strip() == '' or param['inputExample'].strip() == '' or param['textType'].strip() == '':
-            result = ResponseBean.set_status_code(CodeConst.CODE_ERROR_PARAMETER_EMPTY)
-            self.write(json.dumps(result, ensure_ascii=False))
-            return
-
-        #     input_data = [
-        #                    ('investigate', 'The FBI has been called in to investigate.')
-        #                   ]
-
-        paramTuple = (param['inputWord'], param['inputExample'])
-        print(type(paramTuple))
-        paramList = [paramTuple]
-        paramData = {"param": paramList}
-        print(paramData)
-
-        headers = {'content-type': 'application/json',
-                   'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
-
-        spicleNameDict = {
-            "PERSON": {"zh": "姓名", "en": "Name"},
-            "STATE_OR_PROVINCE": {"zh": "州或省", "en": "State or province"},
-            "CITY": {"zh": "城市名", "en": "City"},
-            "GPE": {"zh": "地名", "en": "Location"},
-            "COUNTRY": {"zh": "国家名", "en": "Country"},
-            "LOCATION": {"zh": "地名", "en": "Location"},
-            "ORGANIZATION": {"zh": "组织或机构名", "en": "Organization"},
-            "NUMBER": {"zh": "数字", "en": "Number"},
-            "ORDINAL": {"zh": "序数词", "en": "Ordinal."},
-            "PERCENT": {"zh": "百分比", "en": "Percent"},
-            "DATE": {"zh": "日期", "en": "Date"},
-            "TIME": {"zh": "时间", "en": "Time"}
-        }
-        lastData = []
-        spicleNameStr = ""
-        if param['textType'] == "2":
-            with CoreNLP(url="http://202.112.194.61:8085/", lang="zh") as annotator:
-                begSeg_s = annotator.tokenize(param['inputWord'])
-                begSeg_s = begSeg_s[0]
-                allData = []
-                for segCi in begSeg_s:
-                    curCiDict = {}
-                    curCiDict = {}
-                    exampleParamData = {}
-                    exampleParamData.setdefault("word", segCi)
-                    exampleParamData.setdefault("lang", "zh")
-                    r = requests.post('http://127.0.0.1:6889/api/ExampleSearch', data=exampleParamData)
-                    exampleResult = json.loads(r.content)
-
-                    if len(exampleResult) == 0:
-                        exampleResult.append({"contentQian": "暂无例句"})
-                        curCiDict.setdefault("examples", exampleResult)
-                    else:
-                        lastExexamples = []
-                        for exmStr in exampleResult:
-                            tpmStr = exmStr["content"]
-                            tpmStr = clean_space(tpmStr)
-                            index = index_of_str(tpmStr, segCi)[0]
-                            ciLen = len(segCi)
-                            strOne = tpmStr[0:index]
-                            strTwo = tpmStr[index + ciLen:]
-                            lastExampleStr = strOne + "<span>" + segCi + "</span>" + strTwo
-
-                            sourceStr = ""
-                            if exmStr["source"]:
-                                sourceStr = exmStr["source"]
-                            else:
-                                sourceStr = "书名：暂无"
-                            example = {
-                                "content": lastExampleStr,
-                                "contentQian": strOne,
-                                "contentZhong": segCi,
-                                "contentHou": strTwo,
-                                "source": sourceStr
-                            }
-                            lastExexamples.append(example)
-                        curCiDict.setdefault("examples", lastExexamples)
-
-                    paramTuple = (segCi, param['inputExample'])
-                    paramList = [paramTuple]
-                    paramData = {"param": paramList}
-                    anno = annotator.annotate(param['inputExample'])
-                    seg_s = annotator.tokenize(segCi)
-                    seg_l = annotator.tokenize(param['inputExample'])
-
-                    seg_s = " ".join(seg_s[0])
-                    seg_l = " ".join(seg_l[0])
-                    isIn = param['inputExample'].find(segCi)
-                    print("是否在例句中#################3")
-                    print(isIn)
-                    if isIn != -1:
-                        print("在例句中")
-                        namedEntityList = anno.entities[0]
-                        print(namedEntityList)
-                        if len(namedEntityList):
-                            print("有命名实体")
-                            wordIsEntity = 0 
-                            for tem in namedEntityList:
-                                if segCi == tem["text"]:
-                                    print(tem["text"])
-                                    print(tem["ner"])
-                                    spicleNameStr = tem["ner"]
-                                    if spicleNameStr in spicleNameDict.keys():
-                                        curCiDict.setdefault("explain", segCi)
-                                        curCiDict.setdefault("explain2", spicleNameDict[spicleNameStr]["en"])
-                                        allData.append(curCiDict)
-                                        print(lastData)
-                                        wordIsEntity = 1
-                                        break;
-                            if wordIsEntity == 0:
-                                print("不是---命名实体")
-                                paramData.setdefault("language", "zh")
-                                r = requests.post('http://202.112.194.62:10119/getdefkcl', data=json.dumps(paramData),
-                                                  headers=headers)
-                                result = json.loads(r.text)
-                                for ret in result:
-                                    ret = clean_space(ret)
-
-                                curCiDict.setdefault("explain", segCi)
-                                curCiDict.setdefault("explain2", ret)
-                                allData.append(curCiDict)
-
-                        else:
-                            print("没有---命名实体")
-                            paramData.setdefault("language", "zh")
-                            r = requests.post('http://202.112.194.62:10119/getdefkcl', data=json.dumps(paramData),
-                                              headers=headers)
-                            result = json.loads(r.text)
-
-                            curCiDict.setdefault("explain", segCi)
-                            curCiDict.setdefault("explain2", result)
-                            allData.append(curCiDict)
-
-
-                    else:
-                        print("不---在例句中")
-                        curCiDict = {}
-                        curCiDict.setdefault("explain", "notin")
-                        curCiDict.setdefault("explain2", "")
-                        curCiDict.setdefault("examples", [])
-                        allData.append(curCiDict)
-                        break;
-
-                lastData.append(allData)
-
-        elif param['textType'] == "1":
-            with CoreNLP(url="http://202.112.194.61:8085/", lang="zh") as annotator:
-                begSeg_s = annotator.tokenize(param['inputWord'])
-                begSeg_s = begSeg_s[0]
-                allData = []
-                for segCi in begSeg_s:
-                    curCiDict = {}
-                    exampleParamData = {}
-                    exampleParamData.setdefault("word", segCi)
-                    exampleParamData.setdefault("lang", "zh")
-                    r = requests.post('http://127.0.0.1:6889/api/ExampleSearch', data=exampleParamData)
-                    exampleResult = json.loads(r.content)
-
-                    if len(exampleResult) == 0:
-                        exampleResult.append({"contentQian": "暂无例句"})
-                        curCiDict.setdefault("examples", exampleResult)
-                    else:
-                        lastExexamples = []
-                        for exmStr in exampleResult:
-                            tpmStr = exmStr["content"]
-                            tpmStr = clean_space(tpmStr)
-                            index = index_of_str(tpmStr, segCi)[0]
-                            ciLen = len(segCi)
-                            strOne = tpmStr[0:index]
-                            strTwo = tpmStr[index + ciLen:]
-                            lastExampleStr = strOne + "<span>" + segCi + "</span>" + strTwo
-
-                            sourceStr = ""
-                            if exmStr["source"]:
-                                sourceStr = exmStr["source"]
-                            else:
-                                sourceStr = "书名：暂无"
-                            example = {
-                                "content": lastExampleStr,
-                                "contentQian": strOne,
-                                "contentZhong": segCi,
-                                "contentHou": strTwo,
-                                "source": sourceStr
-                            }
-                            lastExexamples.append(example)
-                        curCiDict.setdefault("examples", lastExexamples)
-
-                    paramTuple = (segCi, param['inputExample'])
-                    paramList = [paramTuple]
-                    paramData = {"param": paramList}
-                    anno = annotator.annotate(param['inputExample'])
-                    seg_s = annotator.tokenize(segCi)
-                    seg_l = annotator.tokenize(param['inputExample'])
-                    seg_s = " ".join(seg_s[0])
-                    seg_l = " ".join(seg_l[0])
-                    isIn = param['inputExample'].find(segCi)
-                    print("是否在例句中#################3")
-                    print(isIn)
-                    if isIn != -1:
-                        print("在例句中")
-                        namedEntityList = anno.entities[0]
-                        print("命名实体#################5")
-                        print(segCi)
-
-                        if len(namedEntityList):
-                            print("有命名实体")
-                            wordIsEntity = 0
-                            for tem in namedEntityList:
-                                if segCi == tem["text"]:
-                                    spicleNameStr = tem["ner"]
-                                    if spicleNameStr in spicleNameDict.keys():
-                                        curCiDict.setdefault("explain", segCi)
-
-                                        curCiDict.setdefault("explain2", spicleNameDict[spicleNameStr]["zh"])
-                                        allData.append(curCiDict)
-                                        wordIsEntity = 1
-                                        break;
-                            if wordIsEntity == 0:
-                                print("不是---命名实体")
-                                paramData.setdefault("language", "zh")
-                                r = requests.post('http://202.112.194.62:10120/getdeffqn', data=json.dumps(paramData),
-                                                  headers=headers)
-                                result = json.loads(r.text)
-
-                                for ret in result:
-                                    ret = clean_space(ret)
-
-                                curCiDict.setdefault("explain", segCi)
-                                curCiDict.setdefault("explain2", deleteFullpointOfChinaExplain(ret))
-                                allData.append(curCiDict)
-                        else:
-                            print("没有---命名实体")
-                            paramData.setdefault("language", "zh")
-                            r = requests.post('http://202.112.194.62:10120/getdeffqn', data=json.dumps(paramData),
-                                              headers=headers)
-                            result = json.loads(r.text)
-                            for ret in result:
-                                ret = clean_space(ret)
-
-                            curCiDict.setdefault("explain", segCi)
-                            curCiDict.setdefault("explain2", deleteFullpointOfChinaExplain(ret))
-                            allData.append(curCiDict)
-                    else:
-                        print("不---在例句中")
-                        curCiDict = {}
-                        curCiDict.setdefault("explain", "notin")
-                        curCiDict.setdefault("explain2", "")
-                        curCiDict.setdefault("examples", [])
-                        allData.append(curCiDict)
-                lastData.append(allData)
-        else:
-            if param['inputWord'] in param['inputExample']:
-                curCiDict = {}
-                exampleParamData = {}
-                exampleParamData.setdefault("word", param['inputWord'])
-                exampleParamData.setdefault("lang", "en")
-                r = requests.post('http://127.0.0.1:6889/api/ExampleSearch', data=exampleParamData)
-                exampleResult = json.loads(r.content)
-                print("英文例句是##################")
-
-                if len(exampleResult) == 0:
-                    exampleResult.append({"contentQian": "There is no example for the time being."})
-                    curCiDict.setdefault("examples", exampleResult)
-                else:
-                    lastExexamples = []
-                    for exmStr in exampleResult:
-                        index = exmStr["content"].index(param['inputWord'])
-                        ciLen = len(param['inputWord'])
-                        strOne = exmStr["content"][0:index]
-                        strTwo = exmStr["content"][index + ciLen:]
-                        lastExampleStr = strOne + "<span>" + param['inputWord'] + "</span>" + strTwo
-                        sourceStr = ""
-                        if exmStr["source"]:
-                            sourceStr = exmStr["source"]
-                        else:
-                            sourceStr = "None"
-                        example = {
-                            "content": lastExampleStr,
-                            "contentQian": strOne,
-                            "contentZhong": param['inputWord'],
-                            "contentHou": strTwo,
-                            "source": "书名：" + sourceStr
-                        }
-                        lastExexamples.append(example)
-                    curCiDict.setdefault("examples", lastExexamples)
-                paramData.setdefault("language", "en")
-                r = requests.post('http://202.112.194.62:10120/getdeffqn', data=json.dumps(paramData), headers=headers)
-                result = json.loads(r.text)
-
-                curCiDict.setdefault("explain", param['inputWord'])
-                curCiDict.setdefault("explain2", result[0])
-
-                lastData.append([curCiDict])
-            else:
-                print("不---在例句中")
-                curCiDict = {}
-                curCiDict.setdefault("explain", "notin")
-                curCiDict.setdefault("explain2", "")
-                curCiDict.setdefault("examples", [])
-                lastData.append([curCiDict])
-
-        ipStr = self.request.headers.get('X-Forwarded-For')
-        print(ipStr)
-        lastResArr = []
-        print("组装结果 -----###################")
-
-        for tmpData in lastData[0]:
-
-            tmDict = {
-                "explain": tmpData["explain"],
-                "explain2": tmpData["explain2"],
-                "examples": tmpData["examples"]
-            }
-            lastResArr.append(tmDict)
-            expStr = ""
-            if tmpData["explain"] == "notin":
-                if param['textType'] == "1":
-                    expStr = "暂无解释"
-                else:
-                    expStr = "There is no explanation for the moment."
-            else:
-
-                if tmpData["explain2"]:
-                    print(tmpData["explain"])
-                    print(tmpData["explain2"])
-                    expStr = tmpData["explain"] + " " + tmpData["explain2"]
-                else:
-                    if param['textType'] == "1":
-                        expStr = tmpData["explain"] + " " + "暂无解释"
-                    else:
-                        expStr = tmpData["explain"] + " " + "There is no explanation for the moment."
-            self.homeService.insert_userIp(ipStr, param['inputWord'], param['inputExample'], expStr, param['textType'])
-
-        result = ResponseBean.set_data(lastResArr)
-
-        self.write(json.dumps(result, ensure_ascii=False))
-
-        return
-
-    def options(self):
-        self.write('{"errorCode":"00","errorMessage","success"}')
-
-
 class HomeSearchGetUserIPHandler(BaseHandler):
     homeService = HomeService()
 
     def get(self):
+        # 获取参数
         data = self.homeService.get_use_ip()
+
+        # 组装结果
         result = ResponseBean.set_data(data)
         self.write(json.dumps(result, ensure_ascii=False))
         return
@@ -383,28 +31,38 @@ class HomeSearchGetUserIPHandler(BaseHandler):
         self.write('{"errorCode":"00","errorMessage","success"}')
 
 
+# 点赞 踩 修改意见 更新
 class UpdataExplianByUserIPHandler(BaseHandler):
     homeService = HomeService()
 
     def post(self):
+        # 获取参数
         param = json.loads(self.request.body.decode('utf-8'))
         print(param)
 
-        if param['explain'].strip() == '' or param['praiseStr'].strip() == '' or param['steponStr'].strip() == '' or \
-                param['modifyStr'].strip() == '':
-            result = ResponseBean.set_status_code(CodeConst.CODE_ERROR_PARAMETER_EMPTY)
+        # 参数为空 useripStr,explain,praiseStr,steponStr,modifyStr
+        if param['explain'].strip() == '' or param['praiseStr'].strip(
+        ) == '' or param['steponStr'].strip(
+        ) == '' or param['modifyStr'].strip() == '':
+            result = ResponseBean.set_status_code(
+                CodeConst.CODE_ERROR_PARAMETER_EMPTY)
             self.write(json.dumps(result, ensure_ascii=False))
             return
 
+        # 获取用户ip
         ipStr = self.request.headers.get('X-Forwarded-For')
+        # ipStr = "127.0.0.1"
         print(ipStr)
         if ipStr == None or ipStr == " ":
             print("ip是空的")
         else:
             print("ip是", ipStr)
             ipStr = ipStr.split(',')[0]
-            data = self.homeService.updata_search_info(ipStr, param['explain'], param['praiseStr'], param['steponStr'],
+            data = self.homeService.updata_search_info(ipStr, param['explain'],
+                                                       param['praiseStr'],
+                                                       param['steponStr'],
                                                        param['modifyStr'])
+        # 组装结果
         result = ResponseBean.set_data(data)
         self.write(json.dumps(result, ensure_ascii=False))
         return
@@ -413,26 +71,116 @@ class UpdataExplianByUserIPHandler(BaseHandler):
         self.write('{"errorCode":"00","errorMessage","success"}')
 
 
+# 对正向词典 解释 提出反馈修改意见
+class InsertExplianFeedbackByUserIPHandler(BaseHandler):
+    homeService = HomeService()
+
+    def post(self):
+        # 获取参数
+        param = json.loads(self.request.body.decode('utf-8'))
+        print(param)
+
+        # 参数为空 useripStr,explain,praiseStr,steponStr,modifyStr
+        if param['wordStr'].strip() == '' or param['sententStr'].strip(
+        ) == '' or param['explainStr'].strip(
+        ) == '' or param['feedbackStr'].strip() == '':
+            result = ResponseBean.set_status_code(
+                CodeConst.CODE_ERROR_PARAMETER_EMPTY)
+            self.write(json.dumps(result, ensure_ascii=False))
+            return
+
+        # 获取用户ip
+        ipStr = self.request.headers.get('X-Forwarded-For')
+        # ipStr = "127.0.0.1"
+
+        if ipStr == None or ipStr == " ":
+            print("ip是空的")
+        else:
+            print("ip是", ipStr)
+            ipStr = ipStr.split(',')[0]
+            data = self.homeService.insert_explain_feedback_by_userIp(
+                ipStr, param['wordStr'], param['sententStr'],
+                param['explainStr'], param['feedbackStr'])
+        # 组装结果
+        result = ResponseBean.set_data(data)
+        self.write(json.dumps(result, ensure_ascii=False))
+        return
+
+    def options(self):
+        self.write('{"errorCode":"00","errorMessage","success"}')
+
+
+# 对正向词典 解释 点赞
+class UpExplianZanByUserIPHandler(BaseHandler):
+    homeService = HomeService()
+
+    def post(self):
+        # 获取参数
+        param = json.loads(self.request.body.decode('utf-8'))
+        print(param)
+
+        # 参数为空 useripStr,explain,praiseStr,steponStr,modifyStr
+        if param['explainStr'].strip() == '':
+            result = ResponseBean.set_status_code(
+                CodeConst.CODE_ERROR_PARAMETER_EMPTY)
+            self.write(json.dumps(result, ensure_ascii=False))
+            return
+
+        # 获取用户ip
+        ipStr = self.request.headers.get('X-Forwarded-For')
+        ipStr = '144.52.166.105'
+
+        # if ipStr == None or ipStr == " ":
+        #     print("ip是空的")
+        # else:
+        #     print("ip是", ipStr)
+        #     ipStr = ipStr.split(',')[0]
+
+        # 1. 获取解释当前点赞数最大的 一条 数据
+        explainData = self.homeService.get_explain_info_by_use_ip(
+            ipStr, param['explainStr'])
+        print("################")
+        print(explainData)
+        # 2。更新点赞数
+
+        # data = self.homeService.insert_explain_feedback_by_userIp(ipStr,param['wordStr'],param['sententStr'],param['explainStr'],param['feedbackStr'])
+        # 组装结果
+        result = ResponseBean.set_data(explainData)
+        self.write(json.dumps(result, ensure_ascii=False))
+        return
+
+    def options(self):
+        self.write('{"errorCode":"00","errorMessage","success"}')
+
+
+# 反馈意见
 class FeedbackByUserIPHandler(BaseHandler):
     homeService = HomeService()
 
     def post(self):
+        # 获取参数
         param = json.loads(self.request.body.decode('utf-8'))
         print(param)
 
+        # 参数为空 feedStr
         if param['feedStr'].strip() == '':
-            result = ResponseBean.set_status_code(CodeConst.CODE_ERROR_PARAMETER_EMPTY)
+            result = ResponseBean.set_status_code(
+                CodeConst.CODE_ERROR_PARAMETER_EMPTY)
             self.write(json.dumps(result, ensure_ascii=False))
             return
 
+        # 获取用户ip
         ipStr = self.request.headers.get('X-Forwarded-For')
+        # ipStr = "127.0.0.1"
         print(ipStr)
         if ipStr == None or ipStr == " ":
             print("ip是空的")
         else:
             print("ip是", ipStr)
             ipStr = ipStr.split(',')[0]
-            data = self.homeService.insert_feedback_by_userIp(ipStr, param['feedStr'])
+            data = self.homeService.insert_feedback_by_userIp(
+                ipStr, param['feedStr'])
+        # 组装结果
         result = ResponseBean.set_data(data)
         self.write(json.dumps(result, ensure_ascii=False))
         return
@@ -441,29 +189,41 @@ class FeedbackByUserIPHandler(BaseHandler):
         self.write('{"errorCode":"00","errorMessage","success"}')
 
 
+# 反向词典 查询结果
 class RedictSearchHandler(BaseHandler):
     homeService = HomeService()
 
     def post(self):
 
+        # 获取参数
         param = json.loads(self.request.body.decode('utf-8'))
         print(param)
 
-        if param['inputExample'].strip() == '' or param['textType'].strip() == '':
-            result = ResponseBean.set_status_code(CodeConst.CODE_ERROR_PARAMETER_EMPTY)
+        # 参数为空 textType  inputExample  inputWord
+        if param['inputExample'].strip() == '' or param['textType'].strip(
+        ) == '':
+            result = ResponseBean.set_status_code(
+                CodeConst.CODE_ERROR_PARAMETER_EMPTY)
             self.write(json.dumps(result, ensure_ascii=False))
             return
 
-        headers = {'content-type': 'application/json',
-                   'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
+        headers = {
+            'content-type':
+            'application/json',
+            'User-Agent':
+            'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'
+        }
 
         lastData = []
+        # 如果没有搜索过  就通过模型获取，然后插入数据库
         ipStr = self.request.headers.get('X-Forwarded-For')
-        if param['textType'] == "1":
+        # ipStr = "127.0.0.1"
+        if param['textType'] == "1":  # 1 是中文
             paramData = {}
             paramData.setdefault("user_input", param['inputExample'])
             paramData.setdefault("lang", "zh")
-            r = requests.post('http://202.112.194.62:6881/api/ReverseDict', data=paramData)
+            r = requests.post('http://202.112.194.62:6881/api/ReverseDict',
+                              data=paramData)
             result = json.loads(r.content)
             if len(result) > 10:
                 result = result[:10]
@@ -471,11 +231,16 @@ class RedictSearchHandler(BaseHandler):
             allData = []
             for segCi in result:
                 curCiDict = {}
+                # 获取 中文例句
+                # data = json.dumps({"word":segCi, "page_size":10, "page_off_set":1})
+                # r = requests.post(url="http://39.98.52.179:8685/word/getWordSentenceExample", data=data)
                 exampleParamData = {}
                 exampleParamData.setdefault("word", segCi)
                 exampleParamData.setdefault("lang", "zh")
-                r = requests.post('http://127.0.0.1:6889/api/ExampleSearch', data=exampleParamData)
+                r = requests.post('http://127.0.0.1:6889/api/ExampleSearch',
+                                  data=exampleParamData)
                 exampleResult = json.loads(r.content)
+                # print(exampleResult)
 
                 if len(exampleResult) == 0:
                     exampleResult.append({"contentQian": "暂无例句"})
@@ -484,12 +249,15 @@ class RedictSearchHandler(BaseHandler):
                     lastExexamples = []
                     for exmStr in exampleResult:
 
+                        # ret = clean_space(ret)
                         tpmStr = exmStr["content"]
+                        # tpmStr = clean_space(tpmStr)
                         index = index_of_str(tpmStr, segCi)[0]
                         ciLen = len(segCi)
                         strOne = tpmStr[0:index]
                         strTwo = tpmStr[index + ciLen:]
                         lastExampleStr = strOne + "<span>" + segCi + "</span>" + strTwo
+                        # print(lastExampleStr)
                         sourceStr = ""
                         if exmStr["source"]:
                             sourceStr = exmStr["source"]
@@ -505,11 +273,13 @@ class RedictSearchHandler(BaseHandler):
                         lastExexamples.append(example)
                     curCiDict.setdefault("examples", lastExexamples)
 
+                # 2.调解释模型
                 paramTuple = (segCi, param['inputExample'])
                 paramList = [paramTuple]
                 paramData = {"param": paramList}
                 paramData.setdefault("language", "zh")
-                r = requests.post('http://202.112.194.62:10120/getdeffqn', data=json.dumps(paramData),
+                r = requests.post('http://202.112.194.62:10120/getdeffqn',
+                                  data=json.dumps(paramData),
                                   headers=headers)
                 result = json.loads(r.text)
 
@@ -519,23 +289,25 @@ class RedictSearchHandler(BaseHandler):
                 curCiDict.setdefault("explain", segCi)
                 curCiDict.setdefault("explain2", ret)
                 expStr = segCi + " " + ret
-                if ipStr == None or ipStr == " ":
+                if ipStr is None or ipStr == " ":
                     print("ip是空的")
                 else:
                     print("ip是", ipStr)
                     ipStr = ipStr.split(',')[0]
-                    self.homeService.insert_redict_userIp(ipStr, param['inputExample'], expStr, param['textType'])
+                    self.homeService.insert_redict_userIp(
+                        ipStr, param['inputExample'], expStr,
+                        param['textType'])
                 allData.append(curCiDict)
 
             lastData = allData
 
-
-        else:
+        else:  # 3 是英文
 
             paramData = {}
             paramData.setdefault("user_input", param['inputExample'])
             paramData.setdefault("lang", "en")
-            r = requests.post('http://202.112.194.62:6881/api/ReverseDict', data=paramData)
+            r = requests.post('http://202.112.194.62:6881/api/ReverseDict',
+                              data=paramData)
             result = json.loads(r.content)
             if len(result) > 10:
                 result = result[:10]
@@ -547,13 +319,17 @@ class RedictSearchHandler(BaseHandler):
                 exampleParamData = {}
                 exampleParamData.setdefault("word", segCi)
                 exampleParamData.setdefault("lang", "en")
-                r = requests.post('http://127.0.0.1:6889/api/ExampleSearch', data=exampleParamData)
+                r = requests.post('http://127.0.0.1:6889/api/ExampleSearch',
+                                  data=exampleParamData)
                 exampleResult = json.loads(r.content)
 
                 print("英文例句是##################")
 
                 if len(exampleResult) == 0:
-                    exampleResult.append({"contentQian": "There is no example for the time being."})
+                    exampleResult.append({
+                        "contentQian":
+                        "There is no example for the time being."
+                    })
                     curCiDict.setdefault("examples", exampleResult)
                 else:
                     lastExexamples = []
@@ -583,7 +359,9 @@ class RedictSearchHandler(BaseHandler):
                 paramList = [paramTuple]
                 paramData = {"param": paramList}
                 paramData.setdefault("language", "en")
-                r = requests.post('http://202.112.194.62:10120/getdeffqn', data=json.dumps(paramData), headers=headers)
+                r = requests.post('http://202.112.194.62:10120/getdeffqn',
+                                  data=json.dumps(paramData),
+                                  headers=headers)
                 result = json.loads(r.text)
 
                 curCiDict.setdefault("explain", segCi)
@@ -594,7 +372,9 @@ class RedictSearchHandler(BaseHandler):
                 else:
                     print("ip是", ipStr)
                     ipStr = ipStr.split(',')[0]
-                    self.homeService.insert_redict_userIp(ipStr, param['inputExample'], expStr, param['textType'])
+                    self.homeService.insert_redict_userIp(
+                        ipStr, param['inputExample'], expStr,
+                        param['textType'])
 
                 allData.append(curCiDict)
 
@@ -610,12 +390,53 @@ class RedictSearchHandler(BaseHandler):
         self.write('{"errorCode":"00","errorMessage","success"}')
 
 
+# 获取方向词典 用户ip 列表
 class RedictSearchGetUserIPHandler(BaseHandler):
     homeService = HomeService()
 
     def get(self):
+        # 获取参数
         data = self.homeService.get_redict_use_ip()
 
+        # 组装结果
+        result = ResponseBean.set_data(data)
+        self.write(json.dumps(result, ensure_ascii=False))
+        return
+
+    def options(self):
+        self.write('{"errorCode":"00","errorMessage","success"}')
+
+
+# 对反向词典 解释 提出反馈修改意见
+class InsertReExplianFeedbackByUserIPHandler(BaseHandler):
+    homeService = HomeService()
+
+    def post(self):
+        # 获取参数
+        param = json.loads(self.request.body.decode('utf-8'))
+        print(param)
+
+        # 参数为空 useripStr,explain,praiseStr,steponStr,modifyStr
+        if param['sententStr'].strip() == '' or param['explainStr'].strip(
+        ) == '' or param['feedbackStr'].strip() == '':
+            result = ResponseBean.set_status_code(
+                CodeConst.CODE_ERROR_PARAMETER_EMPTY)
+            self.write(json.dumps(result, ensure_ascii=False))
+            return
+
+        # 获取用户ip
+        ipStr = self.request.headers.get('X-Forwarded-For')
+        # ipStr = "127.0.0.1"
+
+        if ipStr == None or ipStr == " ":
+            print("ip是空的")
+        else:
+            print("ip是", ipStr)
+            ipStr = ipStr.split(',')[0]
+            data = self.homeService.insert_re_explain_feedback_by_userIp(
+                ipStr, param['sententStr'], param['explainStr'],
+                param['feedbackStr'])
+        # 组装结果
         result = ResponseBean.set_data(data)
         self.write(json.dumps(result, ensure_ascii=False))
         return
