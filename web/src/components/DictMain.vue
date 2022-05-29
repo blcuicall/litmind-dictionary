@@ -10,11 +10,7 @@
         </div>
 
         <div class="top-tool-div">
-          <el-tabs
-            class="el-tabs__item"
-            v-model="activeName"
-            @tab-click="handleClick"
-          >
+          <el-tabs class="el-tabs__item" v-model="activeName" @tab-click="handleClick">
             <el-tab-pane :label="hanyuBtn" name="first"></el-tab-pane>
             <el-tab-pane :label="yingyuBtn" name="second"></el-tab-pane>
             <el-tab-pane :label="hanyingBtn" name="third"></el-tab-pane>
@@ -26,22 +22,14 @@
         <div class="ci-div">
           <div class="input-label">{{ ciLabel }}</div>
 
-          <el-input
-            class="input-ci"
-            v-model="inputCi"
-            :placeholder="ciLabelHolder"
-            @keyup.enter.native="searhBtnClinck"
-          ></el-input>
+          <el-input class="input-ci" v-model="inputCi" :placeholder="ciLabelHolder"
+            @keyup.enter.native="searhBtnClinck"></el-input>
         </div>
 
         <div class="ju-div">
           <div class="input-label">{{ juLabel }}</div>
-          <el-input
-            class="input-ju"
-            v-model="inputJu"
-            :placeholder="juLabelHolder"
-            @keyup.enter.native="searhBtnClinck"
-          ></el-input>
+          <el-input class="input-ju" v-model="inputJu" :placeholder="juLabelHolder"
+            @keyup.enter.native="searhBtnClinck"></el-input>
         </div>
         <div class="search-div" @click="searhBtnClinck">
           <i class="el-icon-search"></i>
@@ -56,12 +44,8 @@
         <ul class="result-list" style="overflow: auto">
           <div class="result-list-item" v-for="dict in searchDataArr">
             <div>
-              <ResultToolView
-                :resultDataDict="dict"
-                :selectType="selectTpye"
-                ref="allVestDialog"
-                @done="callbackConfirmVest"
-              ></ResultToolView>
+              <ResultToolView :resultDataDict="dict" :selectType="selectTpye" ref="allVestDialog"
+                @done="callbackConfirmVest"></ResultToolView>
             </div>
           </div>
         </ul>
@@ -75,19 +59,21 @@
 
     <div class="father-div">
       <label class="tool-btn reproblem-label" @click="returnProblermClick">{{
-        returnProblermLabel
+          returnProblermLabel
       }}</label>
     </div>
 
     <div class="father-div">
-      <label class="tool-btn"
-        >Copyright ⓒ 2021 BLCU-ICALL,
-        <a
-          style="color: #00a1b5; text-decoration: none"
-          href="http://nlp.csai.tsinghua.edu.cn"
-          >THUNLP</a
-        ></label
-      >
+      <label class="tool-btn">Copyright ⓒ 2021 BLCU-ICALL,
+        <a style="color: #00a1b5; text-decoration: none" href="http://nlp.csai.tsinghua.edu.cn">THUNLP
+        </a>
+      </label>
+    </div>
+
+    <div class="'father-div">
+      <label class="tool-btn">
+        国家语委科研项目本系统（ZDI135-105）
+      </label>
     </div>
 
     <div class="commit-view" v-if="isShowCommitview">
@@ -96,13 +82,8 @@
         <div class="commit-label">{{ currExplain }}</div>
 
         <div class="commit-input-dict">
-          <el-input
-            style="border: none; outline: none"
-            type="textarea"
-            :autosize="{ minRows: 3, maxRows: 3 }"
-            :placeholder="resetYourCommit"
-            v-model="textarea"
-          >
+          <el-input style="border: none; outline: none" type="textarea" :autosize="{ minRows: 3, maxRows: 3 }"
+            :placeholder="resetYourCommit" v-model="textarea">
           </el-input>
         </div>
 
@@ -124,13 +105,8 @@
         <div class="commit-label">{{ returnCurrProblemLabel }}</div>
 
         <div class="commit-input-dict">
-          <el-input
-            style="border: none; outline: none"
-            type="textarea"
-            :autosize="{ minRows: 3, maxRows: 3 }"
-            :placeholder="returnResetYourCommit"
-            v-model="returnTextarea"
-          >
+          <el-input style="border: none; outline: none" type="textarea" :autosize="{ minRows: 3, maxRows: 3 }"
+            :placeholder="returnResetYourCommit" v-model="returnTextarea">
           </el-input>
         </div>
 
@@ -418,6 +394,7 @@ export default {
 .dictmain {
   margin-top: 0px;
 }
+
 label {
   color: #00a1b5;
   font-size: 18px;
@@ -563,7 +540,7 @@ label {
   border: 1px solid #00a1b5;
 }
 
-.ci-div >>> .el-input__inner {
+.ci-div>>>.el-input__inner {
   border: 0;
 }
 
@@ -579,7 +556,7 @@ label {
   margin: 30px 30px 30px 30px;
 }
 
-.ju-div >>> .el-input__inner {
+.ju-div>>>.el-input__inner {
   border: 0;
 }
 
@@ -603,6 +580,7 @@ label {
   color: white;
   font-weight: bold;
 }
+
 .search-label {
   margin: 7px 0px 10px 00px;
   font-size: 18px;
@@ -761,7 +739,7 @@ label {
   font-family: "微软雅黑";
 }
 
-.commit-input-dict >>> .el-textarea__inner {
+.commit-input-dict>>>.el-textarea__inner {
   border: 0;
   resize: none;
 }
