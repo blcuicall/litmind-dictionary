@@ -64,9 +64,9 @@
     </div>
 
     <div class="father-div">
-      <label class="tool-btn">Copyright ⓒ 2021 BLCU-ICALL,
-        <a style="color: #00a1b5; text-decoration: none" href="http://nlp.csai.tsinghua.edu.cn">THUNLP
-        </a>
+      <label class="tool-btn">Copyright ⓒ 2021 BLCU-ICALL
+        <!-- <a style="color: #00a1b5; text-decoration: none" href="http://nlp.csai.tsinghua.edu.cn">THUNLP
+        </a> -->
       </label>
     </div>
 
