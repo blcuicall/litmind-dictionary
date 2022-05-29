@@ -54,7 +54,7 @@
         </div>
       </div>
 
-      <div class="empty-div"></div>
+      <!-- <div class="empty-div"></div> -->
     </div>
 
     <div class="father-div">
@@ -70,10 +70,12 @@
       </label>
     </div>
 
-    <div class="'father-div">
-      <label class="tool-btn">
-        国家语委科研项目本系统（ZDI135-105）
-      </label>
+    <div class="father-div">
+      <label class="tool-btn">国家语委重点项目资助（编号：ZDI135-105）</label>
+    </div>
+
+    <div class="father-div">
+      <label class="tool-btn">语言资源高精尖创新中心经费资助（编号：TYZ19005）</label>
     </div>
 
     <div class="commit-view" v-if="isShowCommitview">
@@ -449,7 +451,7 @@ label {
   line-height: 40px;
   text-align: center;
   font-size: 14px;
-  font-family: "Arial";
+  font-family: "Arial", "华文中宋";
 }
 
 .top-result {
